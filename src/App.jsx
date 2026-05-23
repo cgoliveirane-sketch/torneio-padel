@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { supabase } from "./supabase";
 
 const initialPlayers = [
   "Adriel Ribas F.",
@@ -475,6 +476,129 @@ export default function App() {
   const [tvMode, setTvMode] = useState(
     () => new URLSearchParams(window.location.search).get("tv") === "1"
   );
+
+  const hasLoadedRemote = useRef(false);
+  const isApplyingRemote = useRef(false);
+  const saveTimeout = useRef(null);
+
+  function applyTournamentData(saved) {
+    if (!saved) return;
+
+    isApplyingRemote.current = true;
+
+    if (saved.playersText !== undefined) setPlayersText(saved.playersText);
+    if (saved.teams !== undefined) setTeams(saved.teams);
+    if (saved.groupMaxPoints !== undefined) setGroupMaxPoints(saved.groupMaxPoints);
+    if (saved.finalMaxPoints !== undefined) setFinalMaxPoints(saved.finalMaxPoints);
+    if (saved.matches !== undefined) setMatches(saved.matches);
+  }
+
+  function getTournamentPayload() {
+    return {
+      playersText,
+      teams,
+      groupMaxPoints,
+      finalMaxPoints,
+      matches,
+      updatedAt: new Date().toISOString(),
+    };
+  }
+
+  async function loadTournamentFromSupabase() {
+    try {
+      const { data, error } = await supabase
+        .from("tournament_state")
+        .select("id, data, updated_at")
+        .order("id", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error) {
+        console.log("Erro ao carregar Supabase:", error);
+        return;
+      }
+
+      if (data?.data && Object.keys(data.data).length > 0) {
+        applyTournamentData(data.data);
+        console.log("Torneio carregado do Supabase.");
+      } else {
+        console.log("Nenhum torneio salvo no Supabase ainda.");
+      }
+    } catch (error) {
+      console.log("Erro inesperado ao carregar Supabase:", error);
+    } finally {
+      hasLoadedRemote.current = true;
+    }
+  }
+
+  async function saveTournamentToSupabase(payload) {
+    try {
+      const { error } = await supabase.from("tournament_state").insert([
+        {
+          data: payload,
+        },
+      ]);
+
+      if (error) {
+        console.log("Erro ao salvar no Supabase:", error);
+        return;
+      }
+
+      console.log("Torneio salvo no Supabase.");
+    } catch (error) {
+      console.log("Erro inesperado ao salvar no Supabase:", error);
+    }
+  }
+
+  useEffect(() => {
+    loadTournamentFromSupabase();
+
+    const channel = supabase
+      .channel("tournament_state_changes")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "tournament_state",
+        },
+        (payload) => {
+          const saved = payload.new?.data;
+          if (!saved) return;
+
+          applyTournamentData(saved);
+          console.log("Torneio atualizado via Supabase realtime.");
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!hasLoadedRemote.current) return;
+
+    if (isApplyingRemote.current) {
+      isApplyingRemote.current = false;
+      return;
+    }
+
+    if (saveTimeout.current) {
+      clearTimeout(saveTimeout.current);
+    }
+
+    saveTimeout.current = setTimeout(() => {
+      saveTournamentToSupabase(getTournamentPayload());
+    }, 600);
+
+    return () => {
+      if (saveTimeout.current) {
+        clearTimeout(saveTimeout.current);
+      }
+    };
+  }, [playersText, teams, groupMaxPoints, finalMaxPoints, matches]);
 
   const rankings = useMemo(
     () => computeRankings(teams, matches),
