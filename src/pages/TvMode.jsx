@@ -1,4 +1,57 @@
+import { loadTournament } from "../utils/storage";
+import { calculateRanking } from "../utils/ranking";
+import { useEffect, useState } from "react";
 export default function TvMode() {
+  const [tournament, setTournament] = useState(null);
+
+useEffect(() => {
+  const loadData = () => {
+    setTournament(loadTournament());
+  };
+
+  loadData();
+
+  const interval = setInterval(loadData, 1000);
+
+  return () => clearInterval(interval);
+}, []);
+const pendingMatchesA =
+  tournament?.matches?.A?.filter((match) => !match.finished) || [];
+
+const pendingMatchesB =
+  tournament?.matches?.B?.filter((match) => !match.finished) || [];
+
+const nextMatchA =
+  pendingMatchesA[1] || pendingMatchesA[0] || null;
+
+const nextMatchB =
+  pendingMatchesB[1] || pendingMatchesB[0] || null;
+  function getTeam(teamId) {
+  if (!teamId) {
+    return null;
+  }
+
+  const allGroupTeams = [
+    ...(tournament?.groups?.A || []),
+    ...(tournament?.groups?.B || []),
+  ];
+
+  return allGroupTeams.find((team) => team.id === teamId);
+}
+const homeTeamA = getTeam(nextMatchA?.home);
+const awayTeamA = getTeam(nextMatchA?.away);
+
+const homeTeamB = getTeam(nextMatchB?.home);
+const awayTeamB = getTeam(nextMatchB?.away);
+const rankingA = calculateRanking(
+  tournament?.groups?.A || [],
+  tournament?.matches?.A || []
+);
+
+const rankingB = calculateRanking(
+  tournament?.groups?.B || [],
+  tournament?.matches?.B || []
+);
   return (
     <div className="min-h-screen bg-slate-950 p-6 text-white">
       <div className="mx-auto max-w-7xl space-y-6">
@@ -9,7 +62,7 @@ export default function TvMode() {
             </p>
 
             <h1 className="mt-2 text-4xl font-black">
-              Torneio de Pádel
+              Torneio de Padel
             </h1>
           </div>
 
@@ -27,8 +80,10 @@ export default function TvMode() {
             <div className="mt-8 grid grid-cols-[1fr_auto_1fr] items-center gap-5 text-center">
               <div>
                 <p className="text-2xl font-black">
-                  João / Altemar
-                </p>
+  {homeTeamA
+    ? `${homeTeamA.player1} / ${homeTeamA.player2}`
+    : "Aguardando"}
+</p>
               </div>
 
               <div className="text-3xl font-black text-slate-500">
@@ -37,8 +92,10 @@ export default function TvMode() {
 
               <div>
                 <p className="text-2xl font-black">
-                  Patrick / Marcos
-                </p>
+  {awayTeamA
+    ? `${awayTeamA.player1} / ${awayTeamA.player2}`
+    : "Aguardando"}
+</p>
               </div>
             </div>
           </div>
@@ -51,8 +108,10 @@ export default function TvMode() {
             <div className="mt-8 grid grid-cols-[1fr_auto_1fr] items-center gap-5 text-center">
               <div>
                 <p className="text-2xl font-black">
-                  Adriel / Cícero
-                </p>
+  {homeTeamB
+    ? `${homeTeamB.player1} / ${homeTeamB.player2}`
+    : "Aguardando"}
+</p>
               </div>
 
               <div className="text-3xl font-black text-slate-500">
@@ -61,76 +120,97 @@ export default function TvMode() {
 
               <div>
                 <p className="text-2xl font-black">
-                  Mateus / Alexandre
-                </p>
+  {awayTeamB
+    ? `${awayTeamB.player1} / ${awayTeamB.player2}`
+    : "Aguardando"}
+</p>
               </div>
             </div>
           </div>
         </section>
 
-        <section className="grid gap-6 lg:grid-cols-2">
-          <div className="rounded-3xl border border-slate-800 bg-slate-900 p-6 shadow-xl">
-            <h2 className="text-2xl font-black">
-              Classificação — Grupo A
-            </h2>
+       <section className="grid gap-6 lg:grid-cols-2">
+  {/* GRUPO A */}
+  <div className="rounded-3xl border border-slate-800 bg-slate-900 p-6 shadow-xl">
+    <h2 className="text-2xl font-black">
+      Classificação — Grupo A
+    </h2>
 
-            <div className="mt-5 space-y-3">
-              {[
-                ["1º", "João / Altemar", "12"],
-                ["2º", "Patrick / Marcos", "9"],
-                ["3º", "Edipo / Fernando", "3"],
-              ].map(([position, team, points]) => (
-                <div
-                  key={team}
-                  className="grid grid-cols-[60px_1fr_60px] items-center rounded-2xl bg-slate-800 px-4 py-3"
-                >
-                  <span className="font-black text-emerald-400">
-                    {position}
-                  </span>
+    <div className="mt-5 space-y-3">
+      <div className="grid grid-cols-[60px_1fr_80px] mb-2 px-4 text-xs font-bold uppercase text-slate-400">
+  <span>Pos</span>
+  <span>Dupla</span>
+  <span className="text-right">V | SG</span>
+</div>
+      {rankingA.map((item, index) => {
+        const team = getTeam(item.teamId || item.id);
+        console.log("RANKING A:", rankingA);
+console.log("RANKING B:", rankingB);
 
-                  <span className="font-semibold">
-                    {team}
-                  </span>
+        return (
+          <div
+            key={item.teamId || item.id || index}
+            className="grid grid-cols-[60px_1fr_80px] items-center rounded-2xl bg-slate-800 px-4 py-3"
+          >
+            <span className="font-black text-emerald-400">
+              {index + 1}º
+            </span>
 
-                  <span className="text-right font-black">
-                    {points}
-                  </span>
-                </div>
-              ))}
-            </div>
+            <span className="font-semibold">
+              {item.players ||
+                (team
+                  ? `${team.player1} / ${team.player2}`
+                  : "Equipe")}
+            </span>
+
+            <span className="text-right font-black">
+  {item.wins}V | {item.balance > 0 ? "+" : ""}{item.balance}
+</span>
           </div>
+        );
+      })}
+    </div>
+  </div>
 
-          <div className="rounded-3xl border border-slate-800 bg-slate-900 p-6 shadow-xl">
-            <h2 className="text-2xl font-black">
-              Classificação — Grupo B
-            </h2>
+  {/* GRUPO B */}
+  <div className="rounded-3xl border border-slate-800 bg-slate-900 p-6 shadow-xl">
+    <h2 className="text-2xl font-black">
+      Classificação — Grupo B
+    </h2>
+    <div className="mt-5 space-y-3">
+      <div className="grid grid-cols-[60px_1fr_80px] mb-2 px-4 text-xs font-bold uppercase text-slate-400">
+  <span>Pos</span>
+  <span>Dupla</span>
+  <span className="text-right">V | SG</span>
+</div>
+      {rankingB.map((item, index) => {
+        const team = getTeam(item.teamId || item.id);
 
-            <div className="mt-5 space-y-3">
-              {[
-                ["1º", "Adriel / Cícero", "12"],
-                ["2º", "Mateus / Alexandre", "9"],
-                ["3º", "Rafael / Lucas", "3"],
-              ].map(([position, team, points]) => (
-                <div
-                  key={team}
-                  className="grid grid-cols-[60px_1fr_60px] items-center rounded-2xl bg-slate-800 px-4 py-3"
-                >
-                  <span className="font-black text-emerald-400">
-                    {position}
-                  </span>
+        return (
+          <div
+            key={item.teamId || item.id || index}
+            className="grid grid-cols-[60px_1fr_80px] items-center rounded-2xl bg-slate-800 px-4 py-3"
+          >
+            <span className="font-black text-emerald-400">
+              {index + 1}º
+            </span>
 
-                  <span className="font-semibold">
-                    {team}
-                  </span>
+            <span className="font-semibold">
+              {item.players ||
+                (team
+                  ? `${team.player1} / ${team.player2}`
+                  : "Equipe")}
+            </span>
 
-                  <span className="text-right font-black">
-                    {points}
-                  </span>
-                </div>
-              ))}
-            </div>
+            <span className="text-right font-black">
+  {item.wins}V | {item.balance > 0 ? "+" : ""}{item.balance}
+</span>
           </div>
-        </section>
+        );
+      })}
+    </div>
+  </div>
+</section>
       </div>
     </div>
   );
