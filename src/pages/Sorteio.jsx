@@ -53,37 +53,24 @@ export default function Sorteio({settings}) {
 useEffect(() => {
   const saved = loadTournament();
 
-  if (!saved) {
-    return;
+  if (saved) {
+    setTeams(saved.teams || []);
+    setGroups(saved.groups || { A: [], B: [] });
+    setMatches(saved.matches || { A: [], B: [] });
+    setQuarterFinals(saved.quarterFinals || []);
+    setSemifinals(saved.semifinals || []);
+    setFinalMatch(saved.finalMatch || []);
+    setChampion(saved.champion || null);
+    setConfirmed(saved.confirmed || false);
   }
 
-  setTeams(saved.teams || []);
-
-  setGroups(
-    saved.groups || {
-      A: [],
-      B: [],
-    }
-  );
-
-  setMatches(
-    saved.matches || {
-      A: [],
-      B: [],
-    }
-  );
-
-  setQuarterFinals(saved.quarterFinals || []);
-  setSemifinals(saved.semifinals || []);
-  setFinalMatch(saved.finalMatch || []);
-  setChampion(saved.champion || null);
-  setConfirmed(saved.confirmed || false);
   setStorageLoaded(true);
 }, []);
 useEffect(() => {
-    if (!storageLoaded) {
-      return;
-    }
+  if (!storageLoaded) {
+    return;
+  }
+
   saveTournament({
     teams,
     groups,
@@ -95,6 +82,7 @@ useEffect(() => {
     confirmed,
   });
 }, [
+  storageLoaded,
   teams,
   groups,
   matches,

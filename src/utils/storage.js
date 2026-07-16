@@ -1,6 +1,8 @@
 const STORAGE_KEY = "padel-tournament";
 
 export function saveTournament(data) {
+  console.log("SALVANDO", data);
+
   localStorage.setItem(
     STORAGE_KEY,
     JSON.stringify(data)
@@ -14,7 +16,12 @@ export function loadTournament() {
     return null;
   }
 
-  return JSON.parse(saved);
+  try {
+    return JSON.parse(saved);
+  } catch (error) {
+    console.error("Erro ao carregar torneio:", error);
+    return null;
+  }
 }
 
 export function clearTournament() {
