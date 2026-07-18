@@ -5,8 +5,6 @@ import KnockoutMatch from "../components/KnockoutMatch";
 import {
   generateQuarterFinals,
   generateSemifinals,
-  generateSemifinalsFromQuarterFinals,
-  generateFinal,
 } from "../utils/playoffs";
 import RankingTable from "../components/RankingTable";
 
@@ -397,29 +395,39 @@ setMessage(
   }
 
   function handleReset() {
-    const confirmedReset = window.confirm(
-      "Deseja apagar as duplas, os grupos, os jogos e os resultados?"
-    );
+  const confirmedReset = window.confirm(
+    "Deseja iniciar um novo torneio? Todas as duplas, grupos, partidas, resultados e o campeão serão apagados."
+  );
 
-    if (!confirmedReset) {
-      return;
-    }
-
-    setTeams([]);
-
-    setGroups({
-      A: [],
-      B: [],
-    });
-
-    setMatches({
-      A: [],
-      B: [],
-    });
-
-    setConfirmed(false);
-    setMessage("Sorteio reiniciado.");
+  if (!confirmedReset) {
+    return;
   }
+
+  clearTournament();
+
+  setTeams([]);
+
+  setGroups({
+    A: [],
+    B: [],
+  });
+
+  setMatches({
+    A: [],
+    B: [],
+  });
+
+  setQuarterFinals([]);
+  setSemifinals([]);
+  setFinalMatch([]);
+  setChampion(null);
+
+  setConfirmed(false);
+
+  setMessage(
+    "Novo torneio iniciado. Gere novamente as duplas."
+  );
+}
 
   function getTeamLabel(groupName, teamId) {
     const team = groups[groupName].find(
@@ -432,7 +440,107 @@ setMessage(
 
     return team.player1 + " / " + team.player2;
   }
+  function updateSemifinalsFromQuarterFinals(
+  updatedQuarterFinals,
+  currentSemifinals
+  
+) {
+  const qf1Winner = updatedQuarterFinals[0]?.finished
+    ? updatedQuarterFinals[0]?.winner
+    : null;
 
+  const qf2Winner = updatedQuarterFinals[1]?.finished
+    ? updatedQuarterFinals[1]?.winner
+    : null;
+
+  const qf3Winner = updatedQuarterFinals[2]?.finished
+    ? updatedQuarterFinals[2]?.winner
+    : null;
+
+  const qf4Winner = updatedQuarterFinals[3]?.finished
+    ? updatedQuarterFinals[3]?.winner
+    : null;
+
+  const existingSf1 = currentSemifinals[0] || {};
+  const existingSf2 = currentSemifinals[1] || {};
+
+  const sf1ParticipantsChanged =
+    existingSf1.home !== qf1Winner ||
+    existingSf1.away !== qf2Winner;
+
+  const sf2ParticipantsChanged =
+    existingSf2.home !== qf3Winner ||
+    existingSf2.away !== qf4Winner;
+
+  return [
+    {
+      ...existingSf1,
+      id: existingSf1.id || "SF1",
+      home: qf1Winner,
+      away: qf2Winner,
+
+      ...(sf1ParticipantsChanged
+        ? {
+            scoreHome: "",
+            scoreAway: "",
+            finished: false,
+            winner: null,
+          }
+        : {}),
+    },
+    {
+      ...existingSf2,
+      id: existingSf2.id || "SF2",
+      home: qf3Winner,
+      away: qf4Winner,
+
+      ...(sf2ParticipantsChanged
+        ? {
+            scoreHome: "",
+            scoreAway: "",
+            finished: false,
+            winner: null,
+          }
+        : {}),
+    },
+  ];
+}
+function updateFinalFromSemifinals(
+  updatedSemifinals,
+  currentFinal
+) {
+  const sf1Winner = updatedSemifinals[0]?.finished
+    ? updatedSemifinals[0]?.winner
+    : null;
+
+  const sf2Winner = updatedSemifinals[1]?.finished
+    ? updatedSemifinals[1]?.winner
+    : null;
+
+  const existingFinal = currentFinal[0] || {};
+
+  const participantsChanged =
+    existingFinal.home !== sf1Winner ||
+    existingFinal.away !== sf2Winner;
+
+  return [
+    {
+      ...existingFinal,
+      id: existingFinal.id || "FINAL",
+      home: sf1Winner,
+      away: sf2Winner,
+
+      ...(participantsChanged
+        ? {
+            scoreHome: "",
+            scoreAway: "",
+            finished: false,
+            winner: null,
+          }
+        : {}),
+    },
+  ];
+}
   function getWinnerLabel(groupName, winnerId) {
     if (!winnerId) {
       return "";
@@ -677,12 +785,12 @@ setMessage(
           </button>
 
           <button
-            type="button"
-            onClick={handleReset}
-            className="rounded-xl border border-red-200 bg-white px-5 py-3 font-semibold text-red-700 hover:bg-red-50"
-          >
-            ↻ Reiniciar
-          </button>
+  type="button"
+  onClick={handleReset}
+  className="rounded-xl border border-red-200 bg-white px-5 py-3 font-semibold text-red-700 hover:bg-red-50"
+>
+  🏆 Novo torneio
+</button>
         </div>
       </section>
 
@@ -985,7 +1093,7 @@ setMessage(
         )
       );
     }}
-  onFinishMatch={(match) => {
+onFinishMatch={(match) => {
   try {
     const updatedQuarterFinals = finishMatch(
       quarterFinals,
@@ -996,26 +1104,28 @@ setMessage(
     );
 
     setQuarterFinals(updatedQuarterFinals);
-    const generatedSemifinals =
-  generateSemifinalsFromQuarterFinals(
-    updatedQuarterFinals
-  );
 
-if (generatedSemifinals.length === 2) {
-  setSemifinals(generatedSemifinals);
-
-  setMessage(
-    "Quartas encerradas. Semifinais geradas."
-  );
-} else {
-  setMessage(
-    "Resultado das quartas salvo."
-  );
-}
-
-    setMessage(
-      "Resultado das quartas salvo."
+    setSemifinals((currentSemifinals) =>
+      updateSemifinalsFromQuarterFinals(
+        updatedQuarterFinals,
+        currentSemifinals
+      )
     );
+
+    const finishedQuarterFinals =
+      updatedQuarterFinals.filter(
+        (quarterMatch) => quarterMatch.finished
+      ).length;
+
+    if (finishedQuarterFinals === 4) {
+      setMessage(
+        "Quartas encerradas. Semifinais completas."
+      );
+    } else {
+      setMessage(
+        `Resultado salvo. ${finishedQuarterFinals} de 4 classificados para as semifinais.`
+      );
+    }
   } catch (error) {
     setMessage(error.message);
   }
@@ -1054,21 +1164,27 @@ if (generatedSemifinals.length === 2) {
 
         setSemifinals(updatedSemifinals);
 
-        const generatedFinal = generateFinal(
-          updatedSemifinals
-        );
+        setFinalMatch((currentFinal) =>
+  updateFinalFromSemifinals(
+    updatedSemifinals,
+    currentFinal
+  )
+);
 
-        if (generatedFinal.length === 1) {
-          setFinalMatch(generatedFinal);
+const finishedSemifinals =
+  updatedSemifinals.filter(
+    (match) => match.finished
+  ).length;
 
-          setMessage(
-            "Semifinais encerradas. Final gerada."
-          );
-        } else {
-          setMessage(
-            "Resultado da semifinal salvo."
-          );
-        }
+if (finishedSemifinals === 2) {
+  setMessage(
+    "Final completa."
+  );
+} else {
+  setMessage(
+    `Resultado salvo. ${finishedSemifinals} de 2 classificados para a final.`
+  );
+}
       } catch (error) {
         setMessage(error.message);
       }

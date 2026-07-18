@@ -101,21 +101,38 @@ export default function TvMode() {
   const quarterFinals = tournament?.quarterFinals || [];
   const semifinals = tournament?.semifinals || [];
   const finalMatch = tournament?.finalMatch || [];
+  const quarterFinalsFinished =
+  quarterFinals.length === 4 &&
+  quarterFinals.every((match) => match.finished);
 
-  let currentPhase = "groups";
+const semifinalsFinished =
+  semifinals.length === 2 &&
+  semifinals.every((match) => match.finished);
 
-  if (DEMO_MODE) {
-    currentPhase = DEMO_PHASE;
-  } else if (tournament?.champion) {
-    currentPhase = "champion";
-  } else if (finalMatch.length > 0) {
-    currentPhase = "final";
-  } else if (semifinals.length > 0) {
-    currentPhase = "semifinals";
-  } else if (quarterFinals.length > 0) {
-    currentPhase = "quarterFinals";
-  }
+let currentPhase = "groups";
 
+if (DEMO_MODE) {
+  currentPhase = DEMO_PHASE;
+} else if (tournament?.champion) {
+  currentPhase = "champion";
+} else if (
+  semifinalsFinished &&
+  finalMatch.length > 0
+) {
+  currentPhase = "final";
+} else if (quarterFinalsFinished) {
+  currentPhase = "semifinals";
+} else if (
+  quarterFinals.some(
+    (match) =>
+      match?.home ||
+      match?.away ||
+      match?.team1 ||
+      match?.team2
+  )
+) {
+  currentPhase = "quarterFinals";
+}
   const phaseTitle = {
     groups: "Fase de Grupos",
     quarterFinals: "Quartas de Final",
