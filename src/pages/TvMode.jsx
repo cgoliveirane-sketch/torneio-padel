@@ -4,7 +4,7 @@ import TournamentStage from "../components/TournamentStage";
 import { calculateRanking } from "../utils/ranking";
 import { loadTournament } from "../utils/storage";
 
-const DEMO_MODE = true;
+const DEMO_MODE = false;
 
 // Opções:
 // "groups"
