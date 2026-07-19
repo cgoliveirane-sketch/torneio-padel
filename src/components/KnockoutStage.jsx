@@ -27,15 +27,32 @@ export default function KnockoutStage({
     title="Quartas de Final"
     matches={quarterFinals}
     pointOptions={quarterPointOptions}
-    onScoreChange={(id, field, value) => {
-      setQuarterFinals((current) =>
-        current.map((match) =>
-          match.id === id
-            ? { ...match, [field]: value }
-            : match
-        )
-      );
-    }}
+onScoreChange={(id, field, value) => {
+  const updatedQuarterFinals = quarterFinals.map(
+    (match) =>
+      match.id === id
+        ? {
+            ...match,
+            [field]: value,
+            finished: false,
+            winner: null,
+          }
+        : match
+  );
+
+  setQuarterFinals(updatedQuarterFinals);
+
+  setSemifinals((currentSemifinals) =>
+    updateSemifinalsFromQuarterFinals(
+      updatedQuarterFinals,
+      currentSemifinals
+    )
+  );
+
+  setFinalMatch([]);
+  setThirdPlaceMatch([]);
+  setChampion(null);
+}}
 onFinishMatch={(match) => {
   try {
     const updatedQuarterFinals = finishMatch(
@@ -80,9 +97,9 @@ onFinishMatch={(match) => {
     title="Semifinais"
     matches={semifinals}
     pointOptions={semiPointOptions}
-    onScoreChange={(id, field, value) => {
-  setSemifinals((current) =>
-    current.map((match) =>
+   onScoreChange={(id, field, value) => {
+  const updatedSemifinals = semifinals.map(
+    (match) =>
       match.id === id
         ? {
             ...match,
@@ -91,11 +108,25 @@ onFinishMatch={(match) => {
             winner: null,
           }
         : match
+  );
+
+  setSemifinals(updatedSemifinals);
+
+  setFinalMatch((currentFinal) =>
+    updateFinalFromSemifinals(
+      updatedSemifinals,
+      currentFinal
     )
   );
 
-  setFinalMatch([]);
-  setThirdPlaceMatch([]);
+  setThirdPlaceMatch((currentThirdPlace) =>
+    updateThirdPlaceFromSemifinals(
+      updatedSemifinals,
+      currentThirdPlace
+    )
+  );
+
+  setChampion(null);
 }}
     onFinishMatch={(match) => {
       try {
@@ -149,19 +180,19 @@ if (finishedSemifinals === 2) {
     matches={thirdPlaceMatch}
     pointOptions={semiPointOptions}
     onScoreChange={(id, field, value) => {
-      setThirdPlaceMatch((current) =>
-        current.map((match) =>
-          match.id === id
-            ? {
-                ...match,
-                [field]: value,
-                finished: false,
-                winner: null,
-              }
-            : match
-        )
-      );
-    }}
+  setThirdPlaceMatch((current) =>
+    current.map((match) =>
+      match.id === id
+        ? {
+            ...match,
+            [field]: value,
+            finished: false,
+            winner: null,
+          }
+        : match
+    )
+  );
+}}
     onFinishMatch={(match) => {
       try {
         const updatedThirdPlace = finishMatch(
