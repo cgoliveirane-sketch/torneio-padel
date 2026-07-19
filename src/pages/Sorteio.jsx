@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 
 import { playerPool1, playerPool2 } from "../data/players";
-import KnockoutMatch from "../components/KnockoutMatch";
+import KnockoutStage from "../components/KnockoutStage";
 import {
   generateQuarterFinals,
   generateSemifinals,
@@ -29,6 +29,7 @@ import ChampionCard from "../components/ChampionCard";
 import Bracket from "../components/Bracket";
 import PodiumCard from "../components/PodiumCard";
 
+
 export default function Sorteio({settings}) {
   const [teams, setTeams] = useState([]);
 
@@ -44,12 +45,14 @@ export default function Sorteio({settings}) {
   const [quarterFinals, setQuarterFinals] = useState([]);
   const [semifinals, setSemifinals] = useState([]);
   const [finalMatch, setFinalMatch] = useState([]);
+  const [thirdPlaceMatch, setThirdPlaceMatch] = useState([]);
   const [champion, setChampion] = useState(null);
   const [confirmed, setConfirmed] = useState(false);
   const [message, setMessage] = useState("");
   const [storageLoaded, setStorageLoaded] = useState(false);
 useEffect(() => {
   const saved = loadTournament();
+
 
   if (saved) {
     setTeams(saved.teams || []);
@@ -58,6 +61,7 @@ useEffect(() => {
     setQuarterFinals(saved.quarterFinals || []);
     setSemifinals(saved.semifinals || []);
     setFinalMatch(saved.finalMatch || []);
+    setThirdPlaceMatch(saved.thirdPlaceMatch || []);
     setChampion(saved.champion || null);
     setConfirmed(saved.confirmed || false);
   }
@@ -76,6 +80,7 @@ useEffect(() => {
     quarterFinals,
     semifinals,
     finalMatch,
+    thirdPlaceMatch,
     champion,
     confirmed,
   });
@@ -87,6 +92,7 @@ useEffect(() => {
   quarterFinals,
   semifinals,
   finalMatch,
+  thirdPlaceMatch,
   champion,
   confirmed,
 ]);
@@ -420,6 +426,7 @@ setMessage(
   setQuarterFinals([]);
   setSemifinals([]);
   setFinalMatch([]);
+  setThirdPlaceMatch([]);
   setChampion(null);
 
   setConfirmed(false);
@@ -529,6 +536,50 @@ function updateFinalFromSemifinals(
       id: existingFinal.id || "FINAL",
       home: sf1Winner,
       away: sf2Winner,
+
+      ...(participantsChanged
+        ? {
+            scoreHome: "",
+            scoreAway: "",
+            finished: false,
+            winner: null,
+          }
+        : {}),
+    },
+  ];
+}
+
+function updateThirdPlaceFromSemifinals(
+  updatedSemifinals,
+  currentThirdPlace
+) {
+  const sf1Loser = updatedSemifinals[0]?.finished
+    ? updatedSemifinals[0]?.winner ===
+      updatedSemifinals[0]?.home
+      ? updatedSemifinals[0]?.away
+      : updatedSemifinals[0]?.home
+    : null;
+
+  const sf2Loser = updatedSemifinals[1]?.finished
+    ? updatedSemifinals[1]?.winner ===
+      updatedSemifinals[1]?.home
+      ? updatedSemifinals[1]?.away
+      : updatedSemifinals[1]?.home
+    : null;
+
+  const existingThirdPlace =
+    currentThirdPlace[0] || {};
+
+  const participantsChanged =
+    existingThirdPlace.home !== sf1Loser ||
+    existingThirdPlace.away !== sf2Loser;
+
+  return [
+    {
+      ...existingThirdPlace,
+      id: existingThirdPlace.id || "TERCEIRO LUGAR",
+      home: sf1Loser,
+      away: sf2Loser,
 
       ...(participantsChanged
         ? {
@@ -1079,164 +1130,26 @@ function updateFinalFromSemifinals(
   />
 </section>
 )}
-{quarterFinals.length > 0 && (
-  <KnockoutMatch
-    title="Quartas de Final"
-    matches={quarterFinals}
-    pointOptions={groupPointOptions}
-    onScoreChange={(id, field, value) => {
-      setQuarterFinals((current) =>
-        current.map((match) =>
-          match.id === id
-            ? { ...match, [field]: value }
-            : match
-        )
-      );
-    }}
-onFinishMatch={(match) => {
-  try {
-    const updatedQuarterFinals = finishMatch(
-      quarterFinals,
-      match.id,
-      match.scoreHome,
-      match.scoreAway,
-      settings.quarterPoints
-    );
-
-    setQuarterFinals(updatedQuarterFinals);
-
-    setSemifinals((currentSemifinals) =>
-      updateSemifinalsFromQuarterFinals(
-        updatedQuarterFinals,
-        currentSemifinals
-      )
-    );
-
-    const finishedQuarterFinals =
-      updatedQuarterFinals.filter(
-        (quarterMatch) => quarterMatch.finished
-      ).length;
-
-    if (finishedQuarterFinals === 4) {
-      setMessage(
-        "Quartas encerradas. Semifinais completas."
-      );
-    } else {
-      setMessage(
-        `Resultado salvo. ${finishedQuarterFinals} de 4 classificados para as semifinais.`
-      );
-    }
-  } catch (error) {
-    setMessage(error.message);
-  }
-}}
-  />
-)}
-{semifinals.length > 0 && (
-  <KnockoutMatch
-    title="Semifinais"
-    matches={semifinals}
-    pointOptions={semiPointOptions}
-    onScoreChange={(id, field, value) => {
-      setSemifinals((current) =>
-        current.map((match) =>
-          match.id === id
-            ? {
-                ...match,
-                [field]: value,
-                finished: false,
-              }
-            : match
-        )
-      );
-
-      setFinalMatch([]);
-    }}
-    onFinishMatch={(match) => {
-      try {
-        const updatedSemifinals = finishMatch(
-          semifinals,
-          match.id,
-          match.scoreHome,
-          match.scoreAway,
-          settings.semiPoints
-        );
-
-        setSemifinals(updatedSemifinals);
-
-        setFinalMatch((currentFinal) =>
-  updateFinalFromSemifinals(
-    updatedSemifinals,
-    currentFinal
-  )
-);
-
-const finishedSemifinals =
-  updatedSemifinals.filter(
-    (match) => match.finished
-  ).length;
-
-if (finishedSemifinals === 2) {
-  setMessage(
-    "Final completa."
-  );
-} else {
-  setMessage(
-    `Resultado salvo. ${finishedSemifinals} de 2 classificados para a final.`
-  );
-}
-      } catch (error) {
-        setMessage(error.message);
-      }
-    }}
-  />
-)}
-{finalMatch.length > 0 && (
-  <KnockoutMatch
-    title="Final"
-    matches={finalMatch}
-    pointOptions={finalPointOptions}
-    onScoreChange={(id, field, value) => {
-      setFinalMatch((current) =>
-        current.map((match) =>
-          match.id === id
-            ? {
-                ...match,
-                [field]: value,
-                finished: false,
-              }
-            : match
-        )
-      );
-
-      setChampion(null);
-    }}
-    onFinishMatch={(match) => {
-      try {
-        const updatedFinal = finishMatch(
-          finalMatch,
-          match.id,
-          match.scoreHome,
-          match.scoreAway,
-          settings.finalPoints
-        );
-
-        setFinalMatch(updatedFinal);
-
-        const winner =
-          Number(match.scoreHome) >
-          Number(match.scoreAway)
-            ? match.home
-            : match.away;
-
-        setChampion(winner);
-        setMessage("Final encerrada. Campeão definido.");
-      } catch (error) {
-        setMessage(error.message);
-      }
-    }}
-  />
-)}
+<KnockoutStage
+  quarterFinals={quarterFinals}
+  semifinals={semifinals}
+  finalMatch={finalMatch}
+  thirdPlaceMatch={thirdPlaceMatch}
+  settings={settings}
+  quarterPointOptions={quarterPointOptions}
+  semiPointOptions={semiPointOptions}
+  finalPointOptions={finalPointOptions}
+  setQuarterFinals={setQuarterFinals}
+  setSemifinals={setSemifinals}
+  setFinalMatch={setFinalMatch}
+  setThirdPlaceMatch={setThirdPlaceMatch}
+  setChampion={setChampion}
+  setMessage={setMessage}
+  finishMatch={finishMatch}
+  updateSemifinalsFromQuarterFinals={updateSemifinalsFromQuarterFinals}
+  updateFinalFromSemifinals={updateFinalFromSemifinals}
+  updateThirdPlaceFromSemifinals={updateThirdPlaceFromSemifinals}
+/>
 {(quarterFinals.length > 0 ||
   semifinals.length > 0 ||
   finalMatch.length > 0) && (
@@ -1250,7 +1163,7 @@ if (finishedSemifinals === 2) {
 {finalMatch.length > 0 && (
   <PodiumCard
     finalMatch={finalMatch}
-    semifinals={semifinals}
+    thirdPlaceMatch={thirdPlaceMatch}
   />
 )}
   </div>

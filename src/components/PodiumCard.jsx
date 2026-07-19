@@ -22,7 +22,7 @@ function getLoser(match) {
 
 export default function PodiumCard({
   finalMatch = [],
-  semifinals = [],
+  thirdPlaceMatch = [],
 }) {
   const final = finalMatch[0];
 
@@ -33,9 +33,8 @@ export default function PodiumCard({
   const champion = getWinner(final);
   const runnerUp = getLoser(final);
 
-  const thirdPlaces = semifinals
-    .map(getLoser)
-    .filter(Boolean);
+const thirdPlaceGame = thirdPlaceMatch[0];
+const thirdPlace = getWinner(thirdPlaceGame);
 
   return (
     <section className="rounded-3xl border bg-white p-6 shadow-lg">
@@ -76,19 +75,12 @@ export default function PodiumCard({
           <div className="text-4xl">🥉</div>
 
           <h3 className="mt-3 text-xl font-bold">
-            Terceiros colocados
-          </h3>
+  Terceiro colocado
+</h3>
 
-          <div className="mt-3 space-y-2">
-            {thirdPlaces.map((team) => (
-              <p
-                key={team}
-                className="font-semibold text-slate-900"
-              >
-                {team}
-              </p>
-            ))}
-          </div>
+<p className="mt-3 font-semibold text-slate-900">
+  {thirdPlace || "A definir"}
+</p>
         </div>
       </div>
     </section>
