@@ -5,6 +5,7 @@ export default function TournamentStage({
   quarterFinals = [],
   semifinals = [],
   finalMatch = [],
+  thirdPlaceMatch = [],
 }) {
   switch (currentPhase) {
     case "quarterFinals":
@@ -15,6 +16,7 @@ export default function TournamentStage({
           quarterFinals={quarterFinals}
           semifinals={semifinals}
           finalMatch={finalMatch}
+          thirdPlaceMatch={thirdPlaceMatch}
         />
       );
 
@@ -24,6 +26,7 @@ export default function TournamentStage({
           quarterFinals={quarterFinals}
           semifinals={semifinals}
           finalMatch={finalMatch}
+          thirdPlaceMatch={thirdPlaceMatch}
         />
       );
   }

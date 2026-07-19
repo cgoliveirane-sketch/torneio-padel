@@ -101,6 +101,7 @@ export default function TvMode() {
   const quarterFinals = tournament?.quarterFinals || [];
   const semifinals = tournament?.semifinals || [];
   const finalMatch = tournament?.finalMatch || [];
+  const thirdPlaceMatch = tournament?.thirdPlaceMatch || [];
   const quarterFinalsFinished =
   quarterFinals.length === 4 &&
   quarterFinals.every((match) => match.finished);
@@ -117,7 +118,8 @@ if (DEMO_MODE) {
   currentPhase = "champion";
 } else if (
   semifinalsFinished &&
-  finalMatch.length > 0
+  (finalMatch.length > 0 ||
+    thirdPlaceMatch.length > 0)
 ) {
   currentPhase = "final";
 } else if (quarterFinalsFinished) {
@@ -137,7 +139,7 @@ if (DEMO_MODE) {
     groups: "Fase de Grupos",
     quarterFinals: "Quartas de Final",
     semifinals: "Semifinais",
-    final: "Final",
+    final: "Final e Disputa de 3º Lugar",
     champion: "Campeões",
   }[currentPhase];
 
@@ -249,6 +251,7 @@ if (DEMO_MODE) {
             quarterFinals={quarterFinals}
             semifinals={semifinals}
             finalMatch={finalMatch}
+            thirdPlaceMatch={thirdPlaceMatch}
           />
         )}
 

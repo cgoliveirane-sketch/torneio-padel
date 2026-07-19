@@ -5,6 +5,7 @@ export default function BracketScreen({
   quarterFinals = [],
   semifinals = [],
   finalMatch = [],
+  thirdPlaceMatch = [],
 }) {
   const qf1 = quarterFinals[0];
   const qf2 = quarterFinals[1];
@@ -15,10 +16,11 @@ export default function BracketScreen({
   const sf2 = semifinals[1];
 
   const final = finalMatch[0];
+  const thirdPlaceGame = thirdPlaceMatch[0];
 
   return (
     <section className="overflow-x-auto rounded-3xl border border-slate-800 bg-slate-950 p-6 shadow-2xl">
-      <div className="relative mx-auto h-[1020px] min-w-[1720px]">
+      <div className="relative mx-auto h-[1180px] min-w-[1720px]">
 
         {/* Títulos */}
         <div className="absolute left-[20px] top-0 w-[390px] text-center">
@@ -38,6 +40,11 @@ export default function BracketScreen({
             Grande Final
           </h2>
         </div>
+        <div className="absolute left-[1260px] top-[700px] w-[430px] text-center">
+  <h2 className="text-lg font-black uppercase tracking-[0.3em] text-amber-400">
+    Disputa de 3º Lugar
+  </h2>
+</div>
 
         {/* Quartas */}
         <MatchCard match={qf1} label="Quartas 1" className="left-[20px] top-[60px]" />
@@ -56,7 +63,11 @@ export default function BracketScreen({
           isFinal
           className="left-[1260px] top-[430px]"
         />
-
+<MatchCard
+  match={thirdPlace}
+  label="3º Lugar"
+  className="left-[1260px] top-[760px]"
+/>
         {/* Quartas -> Semi */}
         <BracketConnector left={410} top={160} width={120} />
         <BracketConnector left={410} top={390} width={120} />
