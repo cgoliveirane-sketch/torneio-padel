@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import TournamentStage from "../components/TournamentStage";
 import { calculateRanking } from "../utils/ranking";
 import { loadTournament } from "../utils/storage";
+import ChampionCard from "../components/ChampionCard";
+import PodiumCard from "../components/PodiumCard";
 
 const DEMO_MODE = false;
 
@@ -256,18 +258,15 @@ if (DEMO_MODE) {
         )}
 
         {isChampion && (
-          <section className="rounded-3xl border border-emerald-500/40 bg-slate-900 p-10 text-center shadow-2xl">
-            <div className="text-8xl">🏆</div>
+  <div className="mx-auto max-w-7xl space-y-8">
+    <ChampionCard champion={tournament?.champion} />
 
-            <p className="mt-5 text-sm font-black uppercase tracking-[0.35em] text-emerald-400">
-              Campeões do torneio
-            </p>
-
-            <h2 className="mt-5 text-5xl font-black text-white">
-              {tournament.champion}
-            </h2>
-          </section>
-        )}
+    <PodiumCard
+      finalMatch={finalMatch}
+      thirdPlaceMatch={thirdPlaceMatch}
+    />
+  </div>
+)}
       </div>
     </div>
   );
