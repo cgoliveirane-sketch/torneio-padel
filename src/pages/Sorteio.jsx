@@ -131,12 +131,34 @@ const finishedMatchesA = matches.A.filter(
 const finishedMatchesB = matches.B.filter(
   (match) => match.finished
 ).length;
+  const currentTournamentStage = champion
+  ? "finished"
+  : quarterFinals.length > 0 ||
+    semifinals.length > 0 ||
+    finalMatch.length > 0
+  ? "knockout"
+  : matches.A.length > 0 ||
+    matches.B.length > 0
+  ? "groupMatches"
+  : groups.A.length > 0 ||
+    groups.B.length > 0
+  ? "groups"
+  : confirmed
+  ? "confirmed"
+  : teams.length > 0
+  ? "teams"
+  : "start";
+const showSetupDetails =
+  currentTournamentStage === "start" ||
+  currentTournamentStage === "teams" ||
+  currentTournamentStage === "confirmed";
 
 const groupStageFinished =
   matches.A.length === 10 &&
   matches.B.length === 10 &&
   finishedMatchesA === 10 &&
   finishedMatchesB === 10;
+
 
 const semifinalMatches = groupStageFinished
   ? [
@@ -728,6 +750,83 @@ function updateThirdPlaceFromSemifinals(
           1 e um jogador da Lista 2.
         </p>
       </div>
+      <section className="rounded-2xl border bg-white p-4 shadow-sm sm:p-5">
+  <div className="mb-4 flex items-center justify-between gap-3">
+    <div>
+      <p className="text-xs font-black uppercase tracking-[0.25em] text-slate-500">
+        Andamento do torneio
+      </p>
+
+      <h2 className="mt-1 text-lg font-black text-slate-900">
+        {currentTournamentStage === "start" &&
+          "Aguardando geração das duplas"}
+
+        {currentTournamentStage === "teams" &&
+          "Duplas geradas — aguardando confirmação"}
+
+        {currentTournamentStage === "confirmed" &&
+          "Duplas confirmadas — aguardando sorteio dos grupos"}
+
+        {currentTournamentStage === "groups" &&
+          "Grupos definidos — aguardando geração dos jogos"}
+
+        {currentTournamentStage === "groupMatches" &&
+          `Fase de grupos — ${
+            finishedMatchesA + finishedMatchesB
+          } de 20 jogos finalizados`}
+
+        {currentTournamentStage === "knockout" &&
+          "Fase eliminatória em andamento"}
+
+        {currentTournamentStage === "finished" &&
+          "Torneio encerrado"}
+      </h2>
+    </div>
+
+    <span className="rounded-full bg-slate-900 px-3 py-1.5 text-xs font-black text-white">
+      {currentTournamentStage === "start" && "Etapa 1"}
+      {currentTournamentStage === "teams" && "Etapa 2"}
+      {currentTournamentStage === "confirmed" && "Etapa 3"}
+      {currentTournamentStage === "groups" && "Etapa 4"}
+      {currentTournamentStage === "groupMatches" && "Etapa 5"}
+      {currentTournamentStage === "knockout" && "Etapa 6"}
+      {currentTournamentStage === "finished" && "Concluído"}
+    </span>
+  </div>
+
+  <div className="grid grid-cols-6 gap-2">
+    {[
+      "start",
+      "teams",
+      "confirmed",
+      "groups",
+      "groupMatches",
+      "knockout",
+    ].map((stage, index, stages) => {
+      const currentIndex = stages.indexOf(
+        currentTournamentStage
+      );
+
+      const finished =
+        currentTournamentStage === "finished" ||
+        index < currentIndex;
+
+      const active =
+        stage === currentTournamentStage;
+
+      return (
+        <div
+          key={stage}
+          className={`h-2 rounded-full ${
+            finished || active
+              ? "bg-emerald-500"
+              : "bg-slate-200"
+          }`}
+        />
+      );
+    })}
+  </div>
+</section>
 
       {message && (
         <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-medium text-blue-900">
@@ -735,7 +834,8 @@ function updateThirdPlaceFromSemifinals(
         </div>
       )}
 
-      <section className="grid gap-5 lg:grid-cols-2">
+      {showSetupDetails && (
+  <section className="grid gap-5 lg:grid-cols-2">
         <div className="rounded-2xl border bg-white p-5 shadow-sm">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-xl font-bold">
@@ -794,56 +894,79 @@ function updateThirdPlaceFromSemifinals(
           </div>
         </div>
       </section>
+      )}
 
       <section className="rounded-2xl border bg-white p-5 shadow-sm">
-        <div className="flex flex-wrap gap-3">
-          <button
-            type="button"
-            onClick={handleGenerateTeams}
-            className="rounded-xl bg-slate-900 px-5 py-3 font-semibold text-white hover:bg-slate-700"
-          >
-            🎲 Gerar duplas
-          </button>
+  <div className="flex flex-wrap gap-3">
+    {currentTournamentStage === "start" && (
+      <button
+        type="button"
+        onClick={handleGenerateTeams}
+        className="rounded-xl bg-slate-900 px-5 py-3 font-semibold text-white hover:bg-slate-700"
+      >
+        🎲 Gerar duplas
+      </button>
+    )}
 
-          <button
-            type="button"
-            onClick={handleConfirmTeams}
-            disabled={teams.length === 0}
-            className="rounded-xl bg-emerald-700 px-5 py-3 font-semibold text-white hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            ✅ Confirmar duplas
-          </button>
+    {currentTournamentStage === "teams" && (
+      <>
+        <button
+          type="button"
+          onClick={handleGenerateTeams}
+          className="rounded-xl border border-slate-300 bg-white px-5 py-3 font-semibold text-slate-700 hover:bg-slate-50"
+        >
+          🎲 Sortear novamente
+        </button>
 
-          <button
-            type="button"
-            onClick={handleDrawGroups}
-            disabled={!confirmed}
-            className="rounded-xl bg-indigo-700 px-5 py-3 font-semibold text-white hover:bg-indigo-600 disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            🏅 Sortear grupos
-          </button>
+        <button
+          type="button"
+          onClick={handleConfirmTeams}
+          className="rounded-xl bg-emerald-700 px-5 py-3 font-semibold text-white hover:bg-emerald-600"
+        >
+          ✅ Confirmar duplas
+        </button>
+      </>
+    )}
 
-          <button
-            type="button"
-            onClick={handleGenerateMatches}
-            disabled={
-              groups.A.length !== 5 ||
-              groups.B.length !== 5
-            }
-            className="rounded-xl bg-blue-700 px-5 py-3 font-semibold text-white hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            🎯 Gerar jogos
-          </button>
+    {currentTournamentStage === "confirmed" && (
+      <button
+        type="button"
+        onClick={handleDrawGroups}
+        className="rounded-xl bg-indigo-700 px-5 py-3 font-semibold text-white hover:bg-indigo-600"
+      >
+        🏅 Sortear grupos
+      </button>
+    )}
 
-          <button
-  type="button"
-  onClick={handleReset}
-  className="rounded-xl border border-red-200 bg-white px-5 py-3 font-semibold text-red-700 hover:bg-red-50"
->
-  🏆 Novo torneio
-</button>
-        </div>
-      </section>
+    {currentTournamentStage === "groups" && (
+      <button
+        type="button"
+        onClick={handleGenerateMatches}
+        className="rounded-xl bg-blue-700 px-5 py-3 font-semibold text-white hover:bg-blue-600"
+      >
+        🎯 Gerar jogos
+      </button>
+    )}
+
+    {(currentTournamentStage === "groupMatches" ||
+      currentTournamentStage === "knockout" ||
+      currentTournamentStage === "finished") && (
+      <div className="rounded-xl bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-600">
+        Continue lançando os resultados abaixo.
+      </div>
+    )}
+
+    {currentTournamentStage !== "start" && (
+      <button
+        type="button"
+        onClick={handleReset}
+        className="rounded-xl border border-red-200 bg-white px-5 py-3 font-semibold text-red-700 hover:bg-red-50"
+      >
+        🏆 Novo torneio
+      </button>
+    )}
+  </div>
+</section>
 
       {teams.length > 0 && (
         <section className="rounded-2xl border bg-white p-5 shadow-sm">
