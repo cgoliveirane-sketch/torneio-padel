@@ -15,7 +15,7 @@ export default function KnockoutMatch({
         🏆 {title}
       </h2>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-5 x1:grid-cols-2">
         {matches.map((match) => {
           const winner = match.finished
             ? Number(match.scoreHome) >
@@ -58,9 +58,9 @@ export default function KnockoutMatch({
                 </div>
               </div>
 
-              <div className="grid gap-4 md:grid-cols-[1fr_auto_1fr]">
+              <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
                 <div className="text-center">
-                  <div className="mb-2 min-h-10 text-sm font-semibold">
+                  <div className="mb-2 min-h-12 break-words text-sm font-semibold leading-snug">
                     {match.home || "A definir"}
                   </div>
 
@@ -74,7 +74,7 @@ export default function KnockoutMatch({
                         event.target.value
                       )
                     }
-                    className="mx-auto block w-24 rounded-xl border bg-white px-3 py-2 text-center text-xl font-bold disabled:cursor-not-allowed disabled:opacity-60"
+                    className="mx-auto block w-20 rounded-xl border bg-white px-2 py-3 text-center text-xl font-bold outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200 disabled:cursor-not-allowed disabled:opacity-60 sm:w-24"
                   >
                     <option value="">-</option>
 
