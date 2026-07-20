@@ -1,4 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
+import {
+  testSupabaseConnection,
+} from "./services/supabase";
 
 import Dashboard from "./pages/Dashboard";
 import Sorteio from "./pages/Sorteio";
@@ -26,6 +30,27 @@ export default function App() {
       ? JSON.parse(savedSettings)
       : defaultSettings;
   });
+
+  useEffect(() => {
+    async function testConnection() {
+      try {
+        const result =
+          await testSupabaseConnection();
+
+        console.log(
+          "Supabase conectado:",
+          result
+        );
+      } catch (error) {
+        console.error(
+          "Erro ao conectar no Supabase:",
+          error
+        );
+      }
+    }
+
+    testConnection();
+  }, []);
 
   function updateSettings(newSettings) {
     setSettings(newSettings);

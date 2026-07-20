@@ -16,3 +16,16 @@ export const supabase = createClient(
   supabaseUrl,
   supabasePublishableKey
 );
+
+export async function testSupabaseConnection() {
+  const { data, error } = await supabase
+    .from("tournaments")
+    .select("id, name")
+    .limit(1);
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}
