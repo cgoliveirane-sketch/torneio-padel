@@ -16,15 +16,15 @@ export default function BracketScreen({
   const sf2 = semifinals[1];
 
   const final = finalMatch[0];
-  const thirdPlaceGame = thirdPlaceMatch[0];
+  const thirdPlace = thirdPlaceMatch[0];
 
   return (
-  <section className="overflow-x-auto rounded-3xl border border-slate-800 bg-slate-950 p-3 shadow-2xl sm:p-6">
+  <section className="w-full overflow-auto bg-slate-950 p-4">
     <p className="mb-3 text-center text-sm text-slate-400 lg:hidden">
       Deslize horizontalmente para ver toda a chave
     </p>
 
-    <div className="relative mx-auto h-[1180px] min-w-[1720px] origin-top-left scale-[0.72] sm:scale-[0.82] lg:scale-100">
+    <div className="relative mx-auto h-[1180px] w-[1720px]">
 
         {/* Títulos */}
         <div className="absolute left-[20px] top-0 w-[390px] text-center">

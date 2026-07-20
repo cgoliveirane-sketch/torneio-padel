@@ -163,9 +163,9 @@ if (DEMO_MODE) {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 p-6 text-white">
-      <div className="mx-auto max-w-[1800px] space-y-6">
-        <header className="flex flex-col gap-3 rounded-3xl border border-slate-800 bg-slate-900 p-6 shadow-xl md:flex-row md:items-center md:justify-between">
+    <div className="min-h-screen bg-slate-950 p-4 text-white">
+  <div className="mx-auto w-full max-w-[1800px] space-y-4">
+        <header className="flex w-full flex-col gap-3 border-b border-slate-800 bg-slate-900 px-6 py-5 shadow-xl md:flex-row md:items-center md:justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.25em] text-emerald-400">
               Torneio ao vivo
@@ -186,7 +186,7 @@ if (DEMO_MODE) {
             </div>
           </div>
         </header>
-
+        <main className="w-full p-3 sm:p-4">
         {isGroupStage && (
           <>
             <section className="grid gap-6 lg:grid-cols-2">
@@ -267,6 +267,7 @@ if (DEMO_MODE) {
     />
   </div>
 )}
+</main>
       </div>
     </div>
   );

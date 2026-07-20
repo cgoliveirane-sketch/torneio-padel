@@ -15,7 +15,7 @@ const defaultSettings = {
 };
 
 export default function App() {
-  const [pagina, setPagina] = useState("dashboard");
+  const [pagina, setPagina] = useState("sorteio");
 
   const [settings, setSettings] = useState(() => {
     const savedSettings = window.localStorage.getItem(
@@ -59,7 +59,8 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-100">
-      <header className="bg-slate-900 text-white shadow-lg">
+      {pagina !== "tv" && (
+  <header className="bg-slate-900 text-white shadow-lg">
         <div className="mx-auto flex max-w-7xl flex-col gap-4 px-6 py-4 md:flex-row md:items-center md:justify-between">
           <div>
             <h1 className="text-2xl font-bold">
@@ -106,8 +107,14 @@ export default function App() {
           </nav>
         </div>
       </header>
-
-      <main className="mx-auto max-w-7xl p-6">
+      )}
+      <main
+        className={
+          pagina === "tv"
+            ? "w-full bg-slate-950"
+            : "mx-auto w-full max-w-7xl p-6"
+        }
+      >
         {renderPagina()}
       </main>
     </div>
