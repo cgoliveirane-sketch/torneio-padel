@@ -16,7 +16,7 @@ const DEMO_MODE = false;
 // "champion"
 const DEMO_PHASE = "quarterFinals";
 
-export default function TvMode() {
+export default function TvMode({ onExit }) {
   const [tournament, setTournament] = useState(null);
 
   useEffect(() => {
@@ -32,10 +32,14 @@ export default function TvMode() {
   }, []);
 
   const pendingMatchesA =
-    tournament?.matches?.A?.filter((match) => !match.finished) || [];
+    tournament?.matches?.A?.filter(
+      (match) => !match.finished
+    ) || [];
 
   const pendingMatchesB =
-    tournament?.matches?.B?.filter((match) => !match.finished) || [];
+    tournament?.matches?.B?.filter(
+      (match) => !match.finished
+    ) || [];
 
   /*
    * O primeiro jogo pendente é considerado o jogo atual.
@@ -63,8 +67,9 @@ export default function TvMode() {
     ];
 
     return (
-      allGroupTeams.find((team) => team.id === teamId) ||
-      null
+      allGroupTeams.find(
+        (team) => team.id === teamId
+      ) || null
     );
   }
 
@@ -100,43 +105,56 @@ export default function TvMode() {
     tournament?.matches?.B || []
   );
 
-  const quarterFinals = tournament?.quarterFinals || [];
-  const semifinals = tournament?.semifinals || [];
-  const finalMatch = tournament?.finalMatch || [];
-  const thirdPlaceMatch = tournament?.thirdPlaceMatch || [];
+  const quarterFinals =
+    tournament?.quarterFinals || [];
+
+  const semifinals =
+    tournament?.semifinals || [];
+
+  const finalMatch =
+    tournament?.finalMatch || [];
+
+  const thirdPlaceMatch =
+    tournament?.thirdPlaceMatch || [];
+
   const quarterFinalsFinished =
-  quarterFinals.length === 4 &&
-  quarterFinals.every((match) => match.finished);
+    quarterFinals.length === 4 &&
+    quarterFinals.every(
+      (match) => match.finished
+    );
 
-const semifinalsFinished =
-  semifinals.length === 2 &&
-  semifinals.every((match) => match.finished);
+  const semifinalsFinished =
+    semifinals.length === 2 &&
+    semifinals.every(
+      (match) => match.finished
+    );
 
-let currentPhase = "groups";
+  let currentPhase = "groups";
 
-if (DEMO_MODE) {
-  currentPhase = DEMO_PHASE;
-} else if (tournament?.champion) {
-  currentPhase = "champion";
-} else if (
-  semifinalsFinished &&
-  (finalMatch.length > 0 ||
-    thirdPlaceMatch.length > 0)
-) {
-  currentPhase = "final";
-} else if (quarterFinalsFinished) {
-  currentPhase = "semifinals";
-} else if (
-  quarterFinals.some(
-    (match) =>
-      match?.home ||
-      match?.away ||
-      match?.team1 ||
-      match?.team2
-  )
-) {
-  currentPhase = "quarterFinals";
-}
+  if (DEMO_MODE) {
+    currentPhase = DEMO_PHASE;
+  } else if (tournament?.champion) {
+    currentPhase = "champion";
+  } else if (
+    semifinalsFinished &&
+    (finalMatch.length > 0 ||
+      thirdPlaceMatch.length > 0)
+  ) {
+    currentPhase = "final";
+  } else if (quarterFinalsFinished) {
+    currentPhase = "semifinals";
+  } else if (
+    quarterFinals.some(
+      (match) =>
+        match?.home ||
+        match?.away ||
+        match?.team1 ||
+        match?.team2
+    )
+  ) {
+    currentPhase = "quarterFinals";
+  }
+
   const phaseTitle = {
     groups: "Fase de Grupos",
     quarterFinals: "Quartas de Final",
@@ -145,8 +163,11 @@ if (DEMO_MODE) {
     champion: "Campeões",
   }[currentPhase];
 
-  const isGroupStage = currentPhase === "groups";
-  const isChampion = currentPhase === "champion";
+  const isGroupStage =
+    currentPhase === "groups";
+
+  const isChampion =
+    currentPhase === "champion";
 
   if (!tournament) {
     return (
@@ -164,8 +185,8 @@ if (DEMO_MODE) {
 
   return (
     <div className="min-h-screen bg-slate-950 p-4 text-white">
-  <div className="mx-auto w-full max-w-[1800px] space-y-4">
-        <header className="flex w-full flex-col gap-3 border-b border-slate-800 bg-slate-900 px-6 py-5 shadow-xl md:flex-row md:items-center md:justify-between">
+      <div className="mx-auto w-full max-w-[1800px] space-y-6">
+        <header className="flex w-full flex-col gap-4 border-b border-slate-800 bg-slate-900 px-6 py-5 shadow-xl md:flex-row md:items-center md:justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.25em] text-emerald-400">
               Torneio ao vivo
@@ -176,98 +197,113 @@ if (DEMO_MODE) {
             </h1>
           </div>
 
-          <div className="text-center">
-            <div className="rounded-2xl bg-emerald-500 px-5 py-2 text-lg font-black text-slate-950">
-              {phaseTitle}
-            </div>
+          <div className="flex flex-col items-center gap-3 sm:flex-row">
+            <button
+              type="button"
+              onClick={onExit}
+              className="rounded-xl border border-slate-600 bg-slate-800 px-4 py-2 text-sm font-bold text-white hover:bg-slate-700"
+            >
+              ← Voltar para o Sorteio
+            </button>
 
-            <div className="mt-2 text-sm uppercase tracking-widest text-emerald-300">
-              Ao vivo
+            <div className="text-center">
+              <div className="rounded-2xl bg-emerald-500 px-5 py-2 text-lg font-black text-slate-950">
+                {phaseTitle}
+              </div>
+
+              <div className="mt-2 text-sm uppercase tracking-widest text-emerald-300">
+                Ao vivo
+              </div>
             </div>
           </div>
         </header>
-        <main className="w-full p-3 sm:p-4">
-        {isGroupStage && (
-          <>
-            <section className="grid gap-6 lg:grid-cols-2">
-              <div className="rounded-3xl border border-amber-400/30 bg-gradient-to-br from-amber-400/20 to-slate-900 p-6 shadow-xl">
-                <p className="text-sm font-bold uppercase tracking-widest text-amber-300">
-                  Próximo jogo — Grupo A
-                </p>
 
-                <div className="mt-8 grid grid-cols-[1fr_auto_1fr] items-center gap-5 text-center">
-                  <p className="text-2xl font-black">
-                    {formatTeam(homeTeamA)}
+        <main className="w-full">
+          {isGroupStage && (
+            <div className="space-y-8">
+              <section className="grid gap-6 lg:grid-cols-2">
+                <div className="rounded-3xl border border-amber-400/30 bg-gradient-to-br from-amber-400/20 to-slate-900 p-6 shadow-xl">
+                  <p className="text-sm font-bold uppercase tracking-widest text-amber-300">
+                    Próximo jogo — Grupo A
                   </p>
 
-                  <div className="text-3xl font-black text-slate-500">
-                    X
+                  <div className="mt-8 grid grid-cols-[1fr_auto_1fr] items-center gap-5 text-center">
+                    <p className="break-words text-2xl font-black">
+                      {formatTeam(homeTeamA)}
+                    </p>
+
+                    <div className="text-3xl font-black text-slate-500">
+                      X
+                    </div>
+
+                    <p className="break-words text-2xl font-black">
+                      {formatTeam(awayTeamA)}
+                    </p>
                   </div>
-
-                  <p className="text-2xl font-black">
-                    {formatTeam(awayTeamA)}
-                  </p>
                 </div>
-              </div>
 
-              <div className="rounded-3xl border border-blue-400/30 bg-gradient-to-br from-blue-400/20 to-slate-900 p-6 shadow-xl">
-                <p className="text-sm font-bold uppercase tracking-widest text-blue-300">
-                  Próximo jogo — Grupo B
-                </p>
-
-                <div className="mt-8 grid grid-cols-[1fr_auto_1fr] items-center gap-5 text-center">
-                  <p className="text-2xl font-black">
-                    {formatTeam(homeTeamB)}
+                <div className="rounded-3xl border border-blue-400/30 bg-gradient-to-br from-blue-400/20 to-slate-900 p-6 shadow-xl">
+                  <p className="text-sm font-bold uppercase tracking-widest text-blue-300">
+                    Próximo jogo — Grupo B
                   </p>
 
-                  <div className="text-3xl font-black text-slate-500">
-                    X
+                  <div className="mt-8 grid grid-cols-[1fr_auto_1fr] items-center gap-5 text-center">
+                    <p className="break-words text-2xl font-black">
+                      {formatTeam(homeTeamB)}
+                    </p>
+
+                    <div className="text-3xl font-black text-slate-500">
+                      X
+                    </div>
+
+                    <p className="break-words text-2xl font-black">
+                      {formatTeam(awayTeamB)}
+                    </p>
                   </div>
-
-                  <p className="text-2xl font-black">
-                    {formatTeam(awayTeamB)}
-                  </p>
                 </div>
-              </div>
-            </section>
+              </section>
 
-            <section className="grid gap-6 lg:grid-cols-2">
-              <RankingGroup
-                title="Classificação — Grupo A"
-                ranking={rankingA}
-                formatBalance={formatBalance}
+              <section className="grid gap-6 lg:grid-cols-2">
+                <RankingGroup
+                  title="Classificação — Grupo A"
+                  ranking={rankingA}
+                  formatBalance={formatBalance}
+                />
+
+                <RankingGroup
+                  title="Classificação — Grupo B"
+                  ranking={rankingB}
+                  formatBalance={formatBalance}
+                />
+              </section>
+            </div>
+          )}
+
+          {!isGroupStage && !isChampion && (
+            <TournamentStage
+              currentPhase={currentPhase}
+              quarterFinals={quarterFinals}
+              semifinals={semifinals}
+              finalMatch={finalMatch}
+              thirdPlaceMatch={thirdPlaceMatch}
+            />
+          )}
+
+          {isChampion && (
+            <div className="mx-auto max-w-7xl space-y-8">
+              <ChampionCard
+                champion={tournament?.champion}
               />
 
-              <RankingGroup
-                title="Classificação — Grupo B"
-                ranking={rankingB}
-                formatBalance={formatBalance}
+              <PodiumCard
+                finalMatch={finalMatch}
+                thirdPlaceMatch={
+                  thirdPlaceMatch
+                }
               />
-            </section>
-          </>
-        )}
-
-        {!isGroupStage && !isChampion && (
-          <TournamentStage
-            currentPhase={currentPhase}
-            quarterFinals={quarterFinals}
-            semifinals={semifinals}
-            finalMatch={finalMatch}
-            thirdPlaceMatch={thirdPlaceMatch}
-          />
-        )}
-
-        {isChampion && (
-  <div className="mx-auto max-w-7xl space-y-8">
-    <ChampionCard champion={tournament?.champion} />
-
-    <PodiumCard
-      finalMatch={finalMatch}
-      thirdPlaceMatch={thirdPlaceMatch}
-    />
-  </div>
-)}
-</main>
+            </div>
+          )}
+        </main>
       </div>
     </div>
   );
@@ -307,7 +343,7 @@ function RankingGroup({
               {index + 1}º
             </span>
 
-            <span className="font-semibold">
+            <span className="break-words font-semibold">
               {item.players}
             </span>
 

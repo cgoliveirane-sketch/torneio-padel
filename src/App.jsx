@@ -50,7 +50,12 @@ export default function App() {
         );
 
       case "tv":
-        return <TvMode settings={settings} />;
+  return (
+    <TvMode
+      settings={settings}
+      onExit={() => setPagina("sorteio")}
+    />
+  );
 
       default:
         return <Dashboard settings={settings} />;
