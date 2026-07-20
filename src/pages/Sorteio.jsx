@@ -51,39 +51,112 @@ export default function Sorteio({settings}) {
   const [message, setMessage] = useState("");
   const [storageLoaded, setStorageLoaded] = useState(false);
 useEffect(() => {
-  const saved = loadTournament();
+  let isMounted = true;
 
+  async function loadSavedTournament() {
+    try {
+      const saved = await loadTournament();
 
-  if (saved) {
-    setTeams(saved.teams || []);
-    setGroups(saved.groups || { A: [], B: [] });
-    setMatches(saved.matches || { A: [], B: [] });
-    setQuarterFinals(saved.quarterFinals || []);
-    setSemifinals(saved.semifinals || []);
-    setFinalMatch(saved.finalMatch || []);
-    setThirdPlaceMatch(saved.thirdPlaceMatch || []);
-    setChampion(saved.champion || null);
-    setConfirmed(saved.confirmed || false);
+      if (!isMounted) {
+        return;
+      }
+
+      if (saved) {
+        setTeams(saved.teams || []);
+
+        setGroups(
+          saved.groups || {
+            A: [],
+            B: [],
+          }
+        );
+
+        setMatches(
+          saved.matches || {
+            A: [],
+            B: [],
+          }
+        );
+
+        setQuarterFinals(
+          saved.quarterFinals || []
+        );
+
+        setSemifinals(
+          saved.semifinals || []
+        );
+
+        setFinalMatch(
+          saved.finalMatch || []
+        );
+
+        setThirdPlaceMatch(
+          saved.thirdPlaceMatch || []
+        );
+
+        setChampion(saved.champion || null);
+        setConfirmed(saved.confirmed || false);
+      }
+    } catch (error) {
+      console.error(
+        "Erro ao carregar o torneio:",
+        error
+      );
+
+      if (isMounted) {
+        setMessage(
+          "Não foi possível carregar os dados do torneio."
+        );
+      }
+    } finally {
+      if (isMounted) {
+        setStorageLoaded(true);
+      }
+    }
   }
 
-  setStorageLoaded(true);
+  loadSavedTournament();
+
+  return () => {
+    isMounted = false;
+  };
 }, []);
 useEffect(() => {
   if (!storageLoaded) {
     return;
   }
 
-  saveTournament({
-    teams,
-    groups,
-    matches,
-    quarterFinals,
-    semifinals,
-    finalMatch,
-    thirdPlaceMatch,
-    champion,
-    confirmed,
-  });
+  const timeoutId = window.setTimeout(
+    async () => {
+      try {
+        await saveTournament({
+          teams,
+          groups,
+          matches,
+          quarterFinals,
+          semifinals,
+          finalMatch,
+          thirdPlaceMatch,
+          champion,
+          confirmed,
+        });
+      } catch (error) {
+        console.error(
+          "Erro ao sincronizar o torneio:",
+          error
+        );
+
+        setMessage(
+          "Os dados foram salvos localmente, mas houve erro na sincronização online."
+        );
+      }
+    },
+    500
+  );
+
+  return () => {
+    window.clearTimeout(timeoutId);
+  };
 }, [
   storageLoaded,
   teams,
@@ -422,7 +495,7 @@ setMessage(
     }
   }
 
-  function handleReset() {
+  async function handleReset() {
   const confirmedReset = window.confirm(
     "Deseja iniciar um novo torneio? Todas as duplas, grupos, partidas, resultados e o campeão serão apagados."
   );
@@ -431,7 +504,18 @@ setMessage(
     return;
   }
 
-  clearTournament();
+  try {
+  await clearTournament();
+} catch (error) {
+  console.error(
+    "Erro ao limpar o torneio online:",
+    error
+  );
+
+  setMessage(
+    "O torneio foi limpo neste aparelho, mas houve erro ao limpar os dados online."
+  );
+}
 
   setTeams([]);
 

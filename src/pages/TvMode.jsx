@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-
+import { supabase } from "../services/supabase";
 import TournamentStage from "../components/TournamentStage";
 import { calculateRanking } from "../utils/ranking";
 import { loadTournament } from "../utils/storage";
@@ -19,17 +19,60 @@ const DEMO_PHASE = "quarterFinals";
 export default function TvMode({ onExit }) {
   const [tournament, setTournament] = useState(null);
 
-  useEffect(() => {
-    function loadData() {
-      setTournament(loadTournament());
+useEffect(() => {
+  let isMounted = true;
+
+  async function loadData() {
+    try {
+      const savedTournament =
+        await loadTournament();
+
+      if (isMounted) {
+        setTournament(savedTournament);
+      }
+    } catch (error) {
+      console.error(
+        "Erro ao carregar torneio na TV:",
+        error
+      );
     }
+  }
 
-    loadData();
+  loadData();
 
-    const interval = setInterval(loadData, 1000);
+const channel = supabase
+  .channel("torneio-principal-tv")
+  .on(
+    "postgres_changes",
+    {
+      event: "*",
+      schema: "public",
+      table: "tournaments",
+      filter: "id=eq.torneio-principal",
+    },
+    (payload) => {
+      console.log(
+        "Atualização recebida na TV:",
+        payload
+      );
 
-    return () => clearInterval(interval);
-  }, []);
+      if (isMounted && payload.new?.data) {
+        setTournament(payload.new.data);
+      }
+    }
+  )
+  .subscribe((status) => {
+    console.log(
+      "Status do Realtime:",
+      status
+    );
+  });
+
+  return () => {
+    isMounted = false;
+    supabase.removeChannel(channel);
+  };
+}, []);
 
   const pendingMatchesA =
     tournament?.matches?.A?.filter(
