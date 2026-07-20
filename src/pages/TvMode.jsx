@@ -1,7 +1,18 @@
 import { useEffect, useState } from "react";
 
+import TournamentStage from "../components/TournamentStage";
 import { calculateRanking } from "../utils/ranking";
 import { loadTournament } from "../utils/storage";
+
+const DEMO_MODE = true;
+
+// Opções:
+// "groups"
+// "quarterFinals"
+// "semifinals"
+// "final"
+// "champion"
+const DEMO_PHASE = "quarterFinals";
 
 export default function TvMode() {
   const [tournament, setTournament] = useState(null);
@@ -19,19 +30,15 @@ export default function TvMode() {
   }, []);
 
   const pendingMatchesA =
-    tournament?.matches?.A?.filter(
-      (match) => !match.finished
-    ) || [];
+    tournament?.matches?.A?.filter((match) => !match.finished) || [];
 
   const pendingMatchesB =
-    tournament?.matches?.B?.filter(
-      (match) => !match.finished
-    ) || [];
+    tournament?.matches?.B?.filter((match) => !match.finished) || [];
 
   /*
-   * O primeiro jogo pendente é considerado o que está em quadra.
-   * A TV mostra o segundo pendente, que é quem joga depois.
-   * Se houver somente um pendente, ele será mostrado.
+   * O primeiro jogo pendente é considerado o jogo atual.
+   * A TV mostra o segundo pendente como próximo jogo.
+   * Caso exista somente um pendente, ele será mostrado.
    */
   const nextMatchA =
     pendingMatchesA[1] ||
@@ -54,9 +61,8 @@ export default function TvMode() {
     ];
 
     return (
-      allGroupTeams.find(
-        (team) => team.id === teamId
-      ) || null
+      allGroupTeams.find((team) => team.id === teamId) ||
+      null
     );
   }
 
@@ -92,18 +98,15 @@ export default function TvMode() {
     tournament?.matches?.B || []
   );
 
-  const quarterFinals =
-    tournament?.quarterFinals || [];
-
-  const semifinals =
-    tournament?.semifinals || [];
-
-  const finalMatch =
-    tournament?.finalMatch || [];
+  const quarterFinals = tournament?.quarterFinals || [];
+  const semifinals = tournament?.semifinals || [];
+  const finalMatch = tournament?.finalMatch || [];
 
   let currentPhase = "groups";
 
-  if (tournament?.champion) {
+  if (DEMO_MODE) {
+    currentPhase = DEMO_PHASE;
+  } else if (tournament?.champion) {
     currentPhase = "champion";
   } else if (finalMatch.length > 0) {
     currentPhase = "final";
@@ -121,97 +124,18 @@ export default function TvMode() {
     champion: "Campeões",
   }[currentPhase];
 
-  const isGroupStage =
-    currentPhase === "groups";
+  const isGroupStage = currentPhase === "groups";
+  const isChampion = currentPhase === "champion";
 
-  const isQuarterFinals =
-    currentPhase === "quarterFinals";
-
-  const isSemifinals =
-    currentPhase === "semifinals";
-
-  const isFinal =
-    currentPhase === "final";
-
-  const isChampion =
-    currentPhase === "champion";
-
-  function renderKnockoutMatch(match) {
-    if (!match) {
-      return null;
-    }
-
-    const homeWon =
-      match.finished &&
-      Number(match.scoreHome) >
-        Number(match.scoreAway);
-
-    const awayWon =
-      match.finished &&
-      Number(match.scoreAway) >
-        Number(match.scoreHome);
-
+  if (!tournament) {
     return (
-      <div
-        key={match.id}
-        className={
-          match.finished
-            ? "rounded-3xl border border-emerald-500/40 bg-emerald-500/10 p-6 shadow-xl"
-            : "rounded-3xl border border-slate-700 bg-slate-900 p-6 shadow-xl"
-        }
-      >
-        <div className="mb-5 flex items-center justify-between">
-          <span className="text-lg font-black text-emerald-400">
-            {match.id}
-          </span>
+      <div className="flex min-h-screen items-center justify-center bg-slate-950 text-white">
+        <div className="text-center">
+          <div className="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-slate-700 border-t-emerald-400" />
 
-          <span className="text-sm font-bold uppercase tracking-wider text-slate-400">
-            {match.finished
-              ? "Finalizado"
-              : "Próximo jogo"}
-          </span>
-        </div>
-
-        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-5 text-center">
-          <div>
-            <p
-              className={
-                homeWon
-                  ? "text-2xl font-black text-emerald-400"
-                  : "text-2xl font-black"
-              }
-            >
-              {match.home}
-            </p>
-
-            {match.finished && (
-              <p className="mt-3 text-4xl font-black">
-                {match.scoreHome}
-              </p>
-            )}
-          </div>
-
-          <div className="text-3xl font-black text-slate-500">
-            X
-          </div>
-
-          <div>
-            <p
-              className={
-                awayWon
-                  ? "text-2xl font-black text-emerald-400"
-                  : "text-2xl font-black"
-              }
-            >
-              {match.away}
-            </p>
-
-            {match.finished && (
-              <p className="mt-3 text-4xl font-black">
-                {match.scoreAway}
-              </p>
-            )}
-          </div>
+          <p className="mt-5 text-lg font-bold text-slate-300">
+            Carregando torneio...
+          </p>
         </div>
       </div>
     );
@@ -219,7 +143,7 @@ export default function TvMode() {
 
   return (
     <div className="min-h-screen bg-slate-950 p-6 text-white">
-      <div className="mx-auto max-w-7xl space-y-6">
+      <div className="mx-auto max-w-[1800px] space-y-6">
         <header className="flex flex-col gap-3 rounded-3xl border border-slate-800 bg-slate-900 p-6 shadow-xl md:flex-row md:items-center md:justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.25em] text-emerald-400">
@@ -287,140 +211,92 @@ export default function TvMode() {
             </section>
 
             <section className="grid gap-6 lg:grid-cols-2">
-              <div className="rounded-3xl border border-slate-800 bg-slate-900 p-6 shadow-xl">
-                <h2 className="text-2xl font-black">
-                  Classificação — Grupo A
-                </h2>
+              <RankingGroup
+                title="Classificação — Grupo A"
+                ranking={rankingA}
+                formatBalance={formatBalance}
+              />
 
-                <div className="mb-2 mt-5 grid grid-cols-[60px_1fr_100px] px-4 text-xs font-bold uppercase text-slate-400">
-                  <span>Pos.</span>
-                  <span>Dupla</span>
-                  <span className="text-right">
-                    V | SG
-                  </span>
-                </div>
-
-                <div className="space-y-3">
-                  {rankingA.map(
-                    (item, index) => (
-                      <div
-                        key={item.id}
-                        className={`grid grid-cols-[60px_1fr_100px] items-center rounded-2xl border px-4 py-3 ${
-                          index < 4
-                            ? "border-emerald-500/30 bg-slate-800"
-                            : "border-red-500/30 bg-slate-800"
-                        }`}
-                      >
-                        <span className="font-black text-emerald-400">
-                          {index + 1}º
-                        </span>
-
-                        <span className="font-semibold">
-                          {item.players}
-                        </span>
-
-                        <span className="text-right font-black">
-                          {item.wins}V |{" "}
-                          {formatBalance(
-                            item.balance
-                          )}
-                        </span>
-                      </div>
-                    )
-                  )}
-                </div>
-              </div>
-
-              <div className="rounded-3xl border border-slate-800 bg-slate-900 p-6 shadow-xl">
-                <h2 className="text-2xl font-black">
-                  Classificação — Grupo B
-                </h2>
-
-                <div className="mb-2 mt-5 grid grid-cols-[60px_1fr_100px] px-4 text-xs font-bold uppercase text-slate-400">
-                  <span>Pos.</span>
-                  <span>Dupla</span>
-                  <span className="text-right">
-                    V | SG
-                  </span>
-                </div>
-
-                <div className="space-y-3">
-                  {rankingB.map(
-                    (item, index) => (
-                      <div
-                        key={item.id}
-                        className={`grid grid-cols-[60px_1fr_100px] items-center rounded-2xl border px-4 py-3 ${
-                          index < 4
-                            ? "border-emerald-500/30 bg-slate-800"
-                            : "border-red-500/30 bg-slate-800"
-                        }`}
-                      >
-                        <span className="font-black text-emerald-400">
-                          {index + 1}º
-                        </span>
-
-                        <span className="font-semibold">
-                          {item.players}
-                        </span>
-
-                        <span className="text-right font-black">
-                          {item.wins}V |{" "}
-                          {formatBalance(
-                            item.balance
-                          )}
-                        </span>
-                      </div>
-                    )
-                  )}
-                </div>
-              </div>
+              <RankingGroup
+                title="Classificação — Grupo B"
+                ranking={rankingB}
+                formatBalance={formatBalance}
+              />
             </section>
           </>
         )}
 
-        {isQuarterFinals && (
-          <section className="grid gap-6 lg:grid-cols-2">
-            {quarterFinals.map(
-              renderKnockoutMatch
-            )}
-          </section>
-        )}
-
-        {isSemifinals && (
-          <section className="grid gap-6 lg:grid-cols-2">
-            {semifinals.map(
-              renderKnockoutMatch
-            )}
-          </section>
-        )}
-
-        {isFinal && (
-          <section className="mx-auto max-w-4xl">
-            {finalMatch.map(
-              renderKnockoutMatch
-            )}
-          </section>
+        {!isGroupStage && !isChampion && (
+          <TournamentStage
+            currentPhase={currentPhase}
+            quarterFinals={quarterFinals}
+            semifinals={semifinals}
+            finalMatch={finalMatch}
+          />
         )}
 
         {isChampion && (
-          <section className="rounded-3xl border border-amber-300 bg-gradient-to-br from-amber-300 via-yellow-100 to-white p-10 text-center text-slate-950 shadow-2xl">
-            <div className="text-8xl">
-              🏆
-            </div>
+          <section className="rounded-3xl border border-emerald-500/40 bg-slate-900 p-10 text-center shadow-2xl">
+            <div className="text-8xl">🏆</div>
 
-            <p className="mt-5 text-sm font-black uppercase tracking-[0.35em] text-amber-700">
+            <p className="mt-5 text-sm font-black uppercase tracking-[0.35em] text-emerald-400">
               Campeões do torneio
             </p>
 
-            <h2 className="mt-5 text-5xl font-black">
+            <h2 className="mt-5 text-5xl font-black text-white">
               {tournament.champion}
             </h2>
-
-            <div className="mt-8 text-5xl">
-              🥇 🎉
-            </div>
           </section>
         )}
+      </div>
+    </div>
+  );
+}
+
+function RankingGroup({
+  title,
+  ranking,
+  formatBalance,
+}) {
+  return (
+    <div className="rounded-3xl border border-slate-800 bg-slate-900 p-6 shadow-xl">
+      <h2 className="text-2xl font-black">
+        {title}
+      </h2>
+
+      <div className="mb-2 mt-5 grid grid-cols-[60px_1fr_100px] px-4 text-xs font-bold uppercase text-slate-400">
+        <span>Pos.</span>
+        <span>Dupla</span>
+
+        <span className="text-right">
+          V | SG
+        </span>
+      </div>
+
+      <div className="space-y-3">
+        {ranking.map((item, index) => (
+          <div
+            key={item.id}
+            className={`grid grid-cols-[60px_1fr_100px] items-center rounded-2xl border bg-slate-800 px-4 py-3 ${
+              index < 4
+                ? "border-emerald-500/30"
+                : "border-red-500/30"
+            }`}
+          >
+            <span className="font-black text-emerald-400">
+              {index + 1}º
+            </span>
+
+            <span className="font-semibold">
+              {item.players}
+            </span>
+
+            <span className="text-right font-black">
+              {item.wins}V |{" "}
+              {formatBalance(item.balance)}
+            </span>
+          </div>
+        ))}
       </div>
     </div>
   );
