@@ -19,6 +19,10 @@ const defaultSettings = {
 };
 
 export default function App() {
+  const isTvDisplay =
+  new URLSearchParams(window.location.search).get(
+    "view"
+  ) === "tv";
   const [pagina, setPagina] = useState("sorteio");
 
   const [settings, setSettings] = useState(() => {
@@ -30,7 +34,9 @@ export default function App() {
       ? JSON.parse(savedSettings)
       : defaultSettings;
   });
-
+if (isTvDisplay) {
+  return <TvMode />;
+}
   useEffect(() => {
     async function testConnection() {
       try {

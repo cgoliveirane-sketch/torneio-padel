@@ -241,13 +241,15 @@ const channel = supabase
           </div>
 
           <div className="flex flex-col items-center gap-3 sm:flex-row">
-            <button
-              type="button"
-              onClick={onExit}
-              className="rounded-xl border border-slate-600 bg-slate-800 px-4 py-2 text-sm font-bold text-white hover:bg-slate-700"
-            >
-              ← Voltar para o Sorteio
-            </button>
+            {onExit && (
+  <button
+    type="button"
+    onClick={onExit}
+    className="rounded-xl border border-slate-600 bg-slate-800 px-4 py-2 text-sm font-bold text-white hover:bg-slate-700"
+  >
+    ← Voltar para o Sorteio
+  </button>
+)}
 
             <div className="text-center">
               <div className="rounded-2xl bg-emerald-500 px-5 py-2 text-lg font-black text-slate-950">
