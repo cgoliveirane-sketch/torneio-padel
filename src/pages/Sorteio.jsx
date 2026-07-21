@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
 
-import { playerPool1, playerPool2 } from "../data/players";
+import {
+  playerPool1 as defaultPlayerPool1,
+  playerPool2 as defaultPlayerPool2,
+} from "../data/players";
 import KnockoutStage from "../components/KnockoutStage";
 import {
   generateQuarterFinals,
@@ -31,8 +34,15 @@ import PodiumCard from "../components/PodiumCard";
 
 
 export default function Sorteio({settings}) {
-  const [teams, setTeams] = useState([]);
+  const [playerPool1, setPlayerPool1] = useState(
+    defaultPlayerPool1
+  );
 
+  const [playerPool2, setPlayerPool2] = useState(
+    defaultPlayerPool2
+  );
+
+  const [teams, setTeams] = useState([]);
   const [groups, setGroups] = useState({
     A: [],
     B: [],
@@ -62,6 +72,17 @@ useEffect(() => {
       }
 
       if (saved) {
+        setPlayerPool1(
+  saved.playerPool1?.length
+    ? saved.playerPool1
+    : defaultPlayerPool1
+);
+
+setPlayerPool2(
+  saved.playerPool2?.length
+    ? saved.playerPool2
+    : defaultPlayerPool2
+);
         setTeams(saved.teams || []);
 
         setGroups(
@@ -130,6 +151,8 @@ useEffect(() => {
     async () => {
       try {
         await saveTournament({
+          playerPool1,
+          playerPool2,
           teams,
           groups,
           matches,
@@ -159,6 +182,8 @@ useEffect(() => {
   };
 }, [
   storageLoaded,
+  playerPool1,
+  playerPool2,
   teams,
   groups,
   matches,
@@ -169,6 +194,49 @@ useEffect(() => {
   champion,
   confirmed,
 ]);
+function updatePlayer(
+  poolNumber,
+  playerIndex,
+  newName
+) {
+  const updatePool = poolNumber === 1
+    ? setPlayerPool1
+    : setPlayerPool2;
+
+  updatePool((currentPool) =>
+    currentPool.map((player, index) =>
+      index === playerIndex
+        ? newName
+        : player
+    )
+  );
+}
+
+function addPlayer(poolNumber) {
+  const updatePool = poolNumber === 1
+    ? setPlayerPool1
+    : setPlayerPool2;
+
+  updatePool((currentPool) => [
+    ...currentPool,
+    "",
+  ]);
+}
+
+function removePlayer(
+  poolNumber,
+  playerIndex
+) {
+  const updatePool = poolNumber === 1
+    ? setPlayerPool1
+    : setPlayerPool2;
+
+  updatePool((currentPool) =>
+    currentPool.filter(
+      (_, index) => index !== playerIndex
+    )
+  );
+}
   const groupPointOptions = Array.from(
   { length: settings.groupPoints + 1 },
   (_, index) => index
@@ -255,26 +323,58 @@ const semifinalMatches = groupStageFinished
   }
 
   function handleGenerateTeams() {
-    try {
-      const generatedTeams = createBalancedTeams(
-        playerPool1,
-        playerPool2
+  try {
+    const cleanPlayerPool1 = playerPool1
+      .map((player) => player.trim())
+      .filter(Boolean);
+
+    const cleanPlayerPool2 = playerPool2
+      .map((player) => player.trim())
+      .filter(Boolean);
+
+    if (
+      cleanPlayerPool1.length !==
+      cleanPlayerPool2.length
+    ) {
+      setMessage(
+        "As duas listas precisam ter a mesma quantidade de jogadores."
       );
 
-      setTeams(generatedTeams);
-
-      setGroups({
-        A: [],
-        B: [],
-      });
-
-      clearMatches();
-      setConfirmed(false);
-      setMessage("As 10 duplas foram sorteadas.");
-    } catch (error) {
-      setMessage(error.message);
+      return;
     }
+
+    if (
+  cleanPlayerPool1.length !== 10 ||
+  cleanPlayerPool2.length !== 10
+) {
+  setMessage(
+    "O torneio precisa ter exatamente 10 jogadores em cada lista."
+  );
+
+  return;
+}
+
+    const generatedTeams = createBalancedTeams(
+      cleanPlayerPool1,
+      cleanPlayerPool2
+    );
+
+    setTeams(generatedTeams);
+
+    setGroups({
+      A: [],
+      B: [],
+    });
+
+    clearMatches();
+    setConfirmed(false);
+    setMessage(
+      `${generatedTeams.length} duplas foram sorteadas.`
+    );
+  } catch (error) {
+    setMessage(error.message);
   }
+}
 
   function handleChangePlayer(teamId, field, value) {
     setTeams((currentTeams) =>
@@ -301,7 +401,7 @@ const semifinalMatches = groupStageFinished
 
   function handleConfirmTeams() {
     if (teams.length !== 10) {
-      setMessage("Primeiro gere as 10 duplas.");
+      setMessage("Primeiro gere as duplas.");
       return;
     }
 
@@ -920,65 +1020,135 @@ function updateThirdPlaceFromSemifinals(
 
       {showSetupDetails && (
   <section className="grid gap-5 lg:grid-cols-2">
-        <div className="rounded-2xl border bg-white p-5 shadow-sm">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-xl font-bold">
-              Lista 1
-            </h2>
+    <div className="rounded-2xl border bg-white p-5 shadow-sm">
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <div>
+          <h2 className="text-xl font-bold">
+            Lista 1
+          </h2>
 
-            <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-semibold">
-              {playerPool1.length} jogadores
-            </span>
-          </div>
-
-          <div className="space-y-2">
-            {playerPool1.map((player, index) => (
-              <div
-                key={player}
-                className="flex items-center gap-3 rounded-xl bg-slate-50 px-4 py-3"
-              >
-                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white">
-                  {index + 1}
-                </span>
-
-                <span className="font-medium">
-                  {player}
-                </span>
-              </div>
-            ))}
-          </div>
+          <p className="mt-1 text-sm text-slate-500">
+            Jogadores do primeiro grupo do sorteio
+          </p>
         </div>
 
-        <div className="rounded-2xl border bg-white p-5 shadow-sm">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-xl font-bold">
-              Lista 2
-            </h2>
+        <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-semibold">
+          {playerPool1.length} jogadores
+        </span>
+      </div>
 
-            <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-semibold">
-              {playerPool2.length} jogadores
+      <div className="space-y-2">
+        {playerPool1.map((player, index) => (
+          <div
+            key={`pool-1-${index}`}
+            className="flex items-center gap-3 rounded-xl bg-slate-50 p-3"
+          >
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white">
+              {index + 1}
             </span>
-          </div>
 
-          <div className="space-y-2">
-            {playerPool2.map((player, index) => (
-              <div
-                key={player}
-                className="flex items-center gap-3 rounded-xl bg-slate-50 px-4 py-3"
-              >
-                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white">
-                  {index + 1}
-                </span>
+            <input
+              type="text"
+              value={player}
+              onChange={(event) =>
+                updatePlayer(
+                  1,
+                  index,
+                  event.target.value
+                )
+              }
+              placeholder={`Jogador ${index + 1}`}
+              className="min-w-0 flex-1 rounded-xl border bg-white px-3 py-2 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+            />
 
-                <span className="font-medium">
-                  {player}
-                </span>
-              </div>
-            ))}
+            <button
+              type="button"
+              onClick={() =>
+                removePlayer(1, index)
+              }
+              className="rounded-xl border border-red-200 bg-white px-3 py-2 font-semibold text-red-700 hover:bg-red-50"
+              title="Remover jogador"
+            >
+              ✕
+            </button>
           </div>
+        ))}
+      </div>
+
+      <button
+        type="button"
+        onClick={() => addPlayer(1)}
+        className="mt-4 w-full rounded-xl border border-dashed border-slate-300 bg-white px-4 py-3 font-semibold text-slate-700 hover:bg-slate-50"
+      >
+        ＋ Adicionar jogador
+      </button>
+    </div>
+
+    <div className="rounded-2xl border bg-white p-5 shadow-sm">
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <div>
+          <h2 className="text-xl font-bold">
+            Lista 2
+          </h2>
+
+          <p className="mt-1 text-sm text-slate-500">
+            Jogadores do segundo grupo do sorteio
+          </p>
         </div>
-      </section>
-      )}
+
+        <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-semibold">
+          {playerPool2.length} jogadores
+        </span>
+      </div>
+
+      <div className="space-y-2">
+        {playerPool2.map((player, index) => (
+          <div
+            key={`pool-2-${index}`}
+            className="flex items-center gap-3 rounded-xl bg-slate-50 p-3"
+          >
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white">
+              {index + 1}
+            </span>
+
+            <input
+              type="text"
+              value={player}
+              onChange={(event) =>
+                updatePlayer(
+                  2,
+                  index,
+                  event.target.value
+                )
+              }
+              placeholder={`Jogador ${index + 1}`}
+              className="min-w-0 flex-1 rounded-xl border bg-white px-3 py-2 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+            />
+
+            <button
+              type="button"
+              onClick={() =>
+                removePlayer(2, index)
+              }
+              className="rounded-xl border border-red-200 bg-white px-3 py-2 font-semibold text-red-700 hover:bg-red-50"
+              title="Remover jogador"
+            >
+              ✕
+            </button>
+          </div>
+        ))}
+      </div>
+
+      <button
+        type="button"
+        onClick={() => addPlayer(2)}
+        className="mt-4 w-full rounded-xl border border-dashed border-slate-300 bg-white px-4 py-3 font-semibold text-slate-700 hover:bg-slate-50"
+      >
+        ＋ Adicionar jogador
+      </button>
+    </div>
+  </section>
+)}
 
       <section className="rounded-2xl border bg-white p-5 shadow-sm">
   <div className="flex flex-wrap gap-3">
